@@ -1,0 +1,59 @@
+{
+    "author": "vision9074",
+    "dependencies": {
+        "@rebble/clay": "^1.0.4"
+    },
+    "keywords": [
+        "pebble-app"
+    ],
+    "name": "hubitat-control",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "Hubitat Control",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "Req",
+            "ReqId",
+            "ReqCmd",
+            "ReqArg",
+            "Msg",
+            "Num",
+            "Payload",
+            "Mode",
+            "Step",
+            "HubMode",
+            "HubLocalUrl",
+            "HubCloudUrl",
+            "HubShowSensors",
+            "HubSort",
+            "HubStep",
+            "CloudOk",
+            "HubCloudAvailable",
+            "HubVpn",
+            "HubVerifyLocal",
+            "QuickLock",
+            "HubQuickUnlock"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery",
+            "gabbro",
+            "flint"
+        ],
+        "uuid": "7f3b2c94-5d61-4e8a-9c07-1b6e4a2d8f35",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
