@@ -37,6 +37,14 @@
 #define HELLO_RETRY_MS 2500
 #define HELLO_ATTEMPTS 6
 
+// How long a link may be down before anything still queued is treated as stale
+// intent and thrown away rather than delivered late. A real Bluetooth blip is a
+// second or two; beyond this the user has walked off, and a command they pressed
+// before losing the link - an unlock, say - must not fire behind them. Kept
+// short deliberately, because the disconnect event can itself arrive late, which
+// makes the measured gap shorter than the real one.
+#define STALE_QUEUE_SECONDS 10
+
 #define PERSIST_KEY_MODE 1
 
 typedef struct {
@@ -58,6 +66,9 @@ static AppTimer *s_retry_timer;
 
 static AppTimer *s_hello_timer;
 static int s_hello_attempts;
+
+// When the link went down, so a reconnect can tell a blip from an absence.
+static time_t s_disconnected_at;
 
 static LinkState s_link = LinkWaiting;
 static char s_status[STATUS_TEXT_LEN] = "Connecting...";
@@ -100,6 +111,18 @@ static void enqueue(int32_t op, int32_t id, const char *cmd, int32_t arg) {
 static void retry_timer(void *data) {
   s_retry_timer = NULL;
   pump();
+}
+
+static bool queue_has_work(void) {
+  return s_have_current || s_queue_len > 0;
+}
+
+// Drops everything waiting, including the request already pulled off the queue.
+static void queue_clear(void) {
+  s_queue_head = 0;
+  s_queue_len = 0;
+  s_have_current = false;
+  s_attempts = 0;
 }
 
 static void pump(void) {
@@ -171,17 +194,36 @@ static void outbox_failed(DictionaryIterator *iter, AppMessageResult reason,
 // makes it safe for pump() to simply stop while the phone is away.
 static void connection_handler(bool connected) {
   if (!connected) {
+    s_disconnected_at = time(NULL);
     set_status(LinkError, "Phone disconnected");
     return;
   }
 
-  set_status(devices_count() ? LinkReady : LinkLoading,
-             devices_count() ? "Ready" : "Reconnecting...");
+  const bool stale = s_disconnected_at != 0 &&
+                     (time(NULL) - s_disconnected_at) > STALE_QUEUE_SECONDS;
+  const bool had_work = queue_has_work();
+  s_disconnected_at = 0;
+
+  if (stale) {
+    // A button pressed before the link dropped is no longer a safe statement of
+    // intent: the user has moved on and the hub may have changed underneath.
+    // Throw it away rather than acting on it minutes late.
+    queue_clear();
+    set_status(LinkLoading,
+               had_work ? "Dropped stale actions" : "Reconnected");
+  } else {
+    set_status(devices_count() ? LinkReady : LinkLoading,
+               devices_count() ? "Ready" : "Reconnecting...");
+  }
+
   pump();
 
-  // A launch that happened out of range never got its list.
+  // Come back to the truth rather than to whatever the watch last assumed. A
+  // launch that happened out of range never got its list at all.
   if (devices_count() == 0)
     comm_request_list(false);
+  else if (stale)
+    comm_request_states();
 }
 
 // ----------------------------------------------------------------- inbox ---
