@@ -118,6 +118,10 @@ starting **Control Mode**, and save.
 | **Hold Select** | Toggle a switch, plug or light **without opening it** |
 | **Back** | Leave the app |
 
+The app closes itself after **a minute with no button pressed**, returning you to
+your watchface rather than sitting open on your wrist. Any press — moving through
+the list, opening a device, coming back from one — starts the minute again.
+
 Hold-to-toggle deliberately does **not** act on locks, garage doors or door
 controls — holding select on one of those opens its screen instead, so unlocking
 is always something you chose to do. See [Locks and doors](#locks-and-doors).
@@ -318,6 +322,12 @@ sitting on an open menu, nothing is scheduled and nothing is in flight.
 | Send a command | the command, plus one confirming read once it settles |
 | Drag a dimmer | **one** command, not one per step |
 | Idle | nothing |
+
+It also does not stay open. A minute without a button press and the app closes
+itself, so a watch left face-up in a pocket goes back to its watchface instead of
+holding an app — and the phone-side code shuts down with it. Data arriving from
+the hub deliberately does not count as activity: the app closes because you
+stopped using it, not because the hub went quiet.
 
 Failure paths are where a home-control app usually drains a battery, so both are
 capped:
