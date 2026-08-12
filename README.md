@@ -263,6 +263,22 @@ irreversible.
 about what you are choosing: one long press on a list row can then unlock your
 door or open your garage, with nothing to confirm it.
 
+### Actions do not fire late
+
+If the watch loses Bluetooth just as you press something, that press does not sit
+around waiting for the link to come back.
+
+- **A momentary blip** — a second or two — resumes as you would expect, and the
+  press is delivered.
+- **Anything longer than about ten seconds** and the press is **discarded**. You
+  have walked away; a command you gave before losing the link is no longer a safe
+  statement of what you want now, and an unlock arriving minutes later behind
+  your back is exactly the wrong outcome.
+
+On reconnecting after a real absence the watch says `Dropped stale actions` and
+re-reads every device, so what you see is the state of your home now rather than
+whatever it assumed before the link went down.
+
 ### What this cannot protect against
 
 Stated plainly, because security features that oversell themselves are worse than
@@ -307,8 +323,9 @@ Failure paths are where a home-control app usually drains a battery, so both are
 capped:
 
 - **Watch out of range of the phone.** The watch stops transmitting rather than
-  retrying into a dead link, and resumes automatically on reconnect. Anything you
-  pressed stays queued.
+  retrying into a dead link, and resumes automatically on reconnect. A press that
+  did not make it is only delivered if the gap was momentary — see
+  [Actions do not fire late](#actions-do-not-fire-late).
 - **Phone with no signal, or in airplane mode.** Local requests give up after 6
   seconds, and after three failures in a row the app stops trying for a minute,
   failing instantly with no radio use at all. Refresh Devices, switching mode, or
@@ -329,6 +346,7 @@ capped:
 | `Not home - connect VPN` | You are away with VPN selected — connect the VPN, then choose Refresh Devices. |
 | `Hub unreachable - try Cloud` | Local could not reach the hub. Use the **Connection** row to switch to Cloud. |
 | `Phone disconnected` | The watch has lost Bluetooth. It resumes on its own when the phone is back. |
+| `Dropped stale actions` | The link was down long enough that a queued press was discarded rather than delivered late. States are being re-read. |
 | `No devices exposed` | Maker API has no devices selected, or **Show Read-Only Devices** is off and everything you exposed is a sensor. |
 | `Local only` on the Connection row | No usable Cloud URL, or **Cloud Access Available** is off. |
 | `Cloud access is turned off` | You tried to switch to Cloud with that setting off. |
