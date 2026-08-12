@@ -1,0 +1,22 @@
+Hubitat Control
+Copyright (c) 2026 vision9074
+
+This is an unofficial, independently developed Pebble application. It is not
+affiliated with, sponsored by, or endorsed by Hubitat, Inc.
+
+"Hubitat" and "Hubitat Elevation" are trademarks of Hubitat, Inc. They are used
+here only in a descriptive sense, to identify the home automation hub that this
+application communicates with. No claim is made to those marks, and no Hubitat
+logo, artwork, or other branding is reproduced in this application or its store
+listing.
+
+The application talks to a hub exclusively through the Maker API app that the
+hub owner installs and configures themselves, using an access token that the
+owner supplies. It contains no Hubitat code and embeds no credentials.
+
+This application depends on:
+
+  @rebble/clay - configuration page framework for Pebble apps,
+  used under its own license.
+
+The Pebble SDK and its APIs are the property of their respective owners.
