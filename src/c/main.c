@@ -12,6 +12,7 @@
 #include "device_list.h"
 #include "device_window.h"
 #include "devices.h"
+#include "idle.h"
 #include "main_menu.h"
 
 void app_devices_reloaded(void) {
@@ -32,9 +33,11 @@ void app_status_changed(void) {
 static void init(void) {
   comm_init();
   main_menu_push();
+  idle_init();
 }
 
 static void deinit(void) {
+  idle_deinit();
   comm_deinit();
   device_window_deinit();
   device_list_deinit();

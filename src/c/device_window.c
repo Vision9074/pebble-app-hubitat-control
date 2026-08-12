@@ -2,6 +2,7 @@
 
 #include "comm.h"
 #include "devices.h"
+#include "idle.h"
 #include "theme.h"
 
 // Held up/down moves the level in steps this far apart.
@@ -86,6 +87,8 @@ static void set_switched(Device *d, bool on) {
 }
 
 static void select_click(ClickRecognizerRef recognizer, void *context) {
+  idle_poke();
+
   Device *d = current();
   if (!d)
     return;
@@ -105,6 +108,8 @@ static void select_click(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void up_click(ClickRecognizerRef recognizer, void *context) {
+  idle_poke();
+
   Device *d = current();
   if (!d)
     return;
@@ -116,6 +121,8 @@ static void up_click(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void down_click(ClickRecognizerRef recognizer, void *context) {
+  idle_poke();
+
   Device *d = current();
   if (!d)
     return;
@@ -296,6 +303,8 @@ static void window_load(Window *window) {
   s_layer = layer_create(bounds);
   layer_set_update_proc(s_layer, update_proc);
   layer_add_child(root, s_layer);
+
+  idle_poke();
 
   // The launch refresh usually landed moments ago, so re-reading this device
   // over the phone's radio would buy nothing. Only bother once it is stale.

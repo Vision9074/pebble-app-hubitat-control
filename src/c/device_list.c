@@ -3,6 +3,7 @@
 #include "comm.h"
 #include "device_window.h"
 #include "devices.h"
+#include "idle.h"
 #include "theme.h"
 
 static Window *s_window;
@@ -42,7 +43,14 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *index,
   menu_cell_basic_draw(ctx, cell_layer, d->name, status, NULL);
 }
 
+static void selection_changed(struct MenuLayer *menu, MenuIndex new_index,
+                              MenuIndex old_index, void *context) {
+  idle_poke();
+}
+
 static void select_click(MenuLayer *menu, MenuIndex *index, void *context) {
+  idle_poke();
+
   const Device *d = device_at(index->row);
   if (d)
     device_window_push(d->id);
@@ -52,6 +60,8 @@ static void select_click(MenuLayer *menu, MenuIndex *index, void *context) {
 // opening its screen. Anything with a level still opens, since a level needs
 // the up/down buttons that the list is using to scroll.
 static void select_long_click(MenuLayer *menu, MenuIndex *index, void *context) {
+  idle_poke();
+
   Device *d = device_at(index->row);
   if (!d)
     return;
@@ -93,7 +103,8 @@ static void window_load(Window *window) {
     .get_cell_height = get_cell_height,
     .draw_row = draw_row,
     .select_click = select_click,
-    .select_long_click = select_long_click
+    .select_long_click = select_long_click,
+    .selection_changed = selection_changed
   });
   menu_layer_set_click_config_onto_window(s_menu, window);
   menu_layer_set_normal_colors(s_menu, THEME_MENU_BG, THEME_MENU_FG);
@@ -109,12 +120,17 @@ static void window_unload(Window *window) {
   s_menu = NULL;
 }
 
+static void window_appear(Window *window) {
+  idle_poke();
+}
+
 void device_list_push(void) {
   if (!s_window) {
     s_window = window_create();
     window_set_background_color(s_window, THEME_MENU_BG);
     window_set_window_handlers(s_window, (WindowHandlers){
       .load = window_load,
+      .appear = window_appear,
       .unload = window_unload
     });
   }

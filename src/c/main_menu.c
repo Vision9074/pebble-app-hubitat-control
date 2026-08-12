@@ -3,6 +3,7 @@
 #include "comm.h"
 #include "device_list.h"
 #include "devices.h"
+#include "idle.h"
 #include "theme.h"
 
 #define ROW_DEVICES 0
@@ -65,7 +66,14 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *index,
   }
 }
 
+static void selection_changed(struct MenuLayer *menu, MenuIndex new_index,
+                              MenuIndex old_index, void *context) {
+  idle_poke();
+}
+
 static void select_click(MenuLayer *menu, MenuIndex *index, void *context) {
+  idle_poke();
+
   switch (index->row) {
     case ROW_DEVICES:
       device_list_push();
@@ -106,7 +114,8 @@ static void window_load(Window *window) {
     .get_num_rows = get_num_rows,
     .get_cell_height = get_cell_height,
     .draw_row = draw_row,
-    .select_click = select_click
+    .select_click = select_click,
+    .selection_changed = selection_changed
   });
   menu_layer_set_click_config_onto_window(s_menu, window);
   menu_layer_set_normal_colors(s_menu, THEME_MENU_BG, THEME_MENU_FG);
@@ -122,12 +131,19 @@ static void window_unload(Window *window) {
   s_menu = NULL;
 }
 
+// Coming back from a device is activity too, and this catches the Back button
+// without having to take over the menu's own click handling.
+static void window_appear(Window *window) {
+  idle_poke();
+}
+
 void main_menu_push(void) {
   if (!s_window) {
     s_window = window_create();
     window_set_background_color(s_window, THEME_MENU_BG);
     window_set_window_handlers(s_window, (WindowHandlers){
       .load = window_load,
+      .appear = window_appear,
       .unload = window_unload
     });
   }
