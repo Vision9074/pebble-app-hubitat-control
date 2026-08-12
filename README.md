@@ -27,7 +27,7 @@ are the only things involved.
 
 ## Features
 
-- **Every device on one list**, with its current state — `On · 75%`, `Locked`,
+- **Every device on one list**, with its current state — `On - 75%`, `Locked`,
   `Closed`, `72°`.
 - **One-button control.** Select toggles; up and down drive dimmers, volume and
   shade position.
@@ -37,7 +37,8 @@ are the only things involved.
   network is touched. Live states load in behind it.
 - **Careful with your credentials.** The watch never holds your access token, and
   the app refuses to send it to a network that has not proven it is your own.
-- **Careful with your battery.** Nothing polls, nothing runs in the background.
+- **Careful with your battery.** Nothing polls, nothing runs in the background,
+  and the app closes itself after a minute rather than sitting open on your wrist.
 
 ---
 
@@ -89,8 +90,10 @@ Open the app's settings from the Pebble phone app and paste those two URLs into
 app id and access token are read out of them — there is nothing to assemble by
 hand.
 
-Then set **Cloud Access Available** to match what you turned on in step 3, pick a
-starting **Control Mode**, and save.
+Then set **Cloud Access Available** to match whether you enabled *Allow Access via
+Cloud* above, pick a starting **Control Mode**, and save. If you have no cloud
+access, leave the Cloud URL blank and turn that setting off — the app will run
+Local-only and say so.
 
 > **Your access token is a password for every device you selected.** Anyone who
 > has it can unlock what it can unlock. Treat the settings page like a password
@@ -118,10 +121,6 @@ starting **Control Mode**, and save.
 | **Hold Select** | Toggle a switch, plug or light **without opening it** |
 | **Back** | Leave the app |
 
-The app closes itself after **a minute with no button pressed**, returning you to
-your watchface rather than sitting open on your wrist. Any press — moving through
-the list, opening a device, coming back from one — starts the minute again.
-
 Hold-to-toggle deliberately does **not** act on locks, garage doors or door
 controls — holding select on one of those opens its screen instead, so unlocking
 is always something you chose to do. See [Locks and doors](#locks-and-doors).
@@ -138,6 +137,17 @@ Holding up or down repeats. The level is sent once you stop moving it, so
 dragging a dimmer from 10% to 80% is **one** command to your hub, not fourteen.
 
 Momentary buttons fire on a single **Select**, with a short buzz to confirm.
+
+### It closes itself
+
+After **a minute with no button pressed**, the app closes and hands the screen
+back to your watchface. Any press starts the minute again — moving through the
+list, opening a device, or coming back from one.
+
+This is deliberate. A control app is something you use for a few seconds and walk
+away from, and one left open on your wrist keeps the watch awake for no reason.
+Readings arriving from your hub do not count as activity: the app closes because
+*you* stopped using it, not because the hub went quiet.
 
 ---
 
@@ -310,10 +320,11 @@ remembers only which mode you last chose.
 
 ## Battery
 
-The app is entirely event-driven. **Nothing runs in the background on either
-device** — no timers, no sensor subscriptions, no polling — and the phone-side
-code is shut down with the watch app. A closed app costs nothing at all, and
-sitting on an open menu, nothing is scheduled and nothing is in flight.
+The app is entirely event-driven. **Nothing polls, and nothing runs in the
+background on either device** — no sensor subscriptions, no periodic refresh, no
+checking in with the hub — and the phone-side code shuts down with the watch app,
+so a closed app costs nothing at all. Sitting on an open menu, the only thing
+scheduled is the timer that closes the app.
 
 | Action | Cost |
 | --- | --- |
@@ -323,11 +334,9 @@ sitting on an open menu, nothing is scheduled and nothing is in flight.
 | Drag a dimmer | **one** command, not one per step |
 | Idle | nothing |
 
-It also does not stay open. A minute without a button press and the app closes
-itself, so a watch left face-up in a pocket goes back to its watchface instead of
-holding an app — and the phone-side code shuts down with it. Data arriving from
-the hub deliberately does not count as activity: the app closes because you
-stopped using it, not because the hub went quiet.
+It also does not stay open — see [It closes itself](#it-closes-itself). That is
+the single biggest saving available to a watch app, because an app left running
+keeps the watch out of the low-power state its watchface sits in.
 
 Failure paths are where a home-control app usually drains a battery, so both are
 capped:
@@ -361,6 +370,10 @@ capped:
 | `Local only` on the Connection row | No usable Cloud URL, or **Cloud Access Available** is off. |
 | `Cloud access is turned off` | You tried to switch to Cloud with that setting off. |
 
+**The app closed on its own.** That is the inactivity timeout, not a crash — a
+minute with no button pressed and it returns you to your watchface. See
+[It closes itself](#it-closes-itself).
+
 **A device is missing.** The list is cached on purpose. Choose **Refresh
 Devices** after adding anything in Hubitat.
 
@@ -385,6 +398,7 @@ src/c/
   main_menu.c/.h      devices / refresh / connection / status
   device_list.c/.h    the scrolling device list
   device_window.c/.h  one device's control screen
+  idle.c/.h           the inactivity timeout that closes the app
   theme.h             colours, with monochrome fallbacks
 src/pkjs/
   index.js            Maker API client, device classification, cache, safeguards
